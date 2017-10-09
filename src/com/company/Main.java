@@ -48,9 +48,9 @@ public class Main {
         System.out.println(encoded);
 
         Map<String, Character> decodingTable = createDecodingTable(encodingTable);
-        byte[] decodingTableAsByte = tableToByte(decodingTable);
 
-        //saveToFile(outFileName,encoded, decodingTableAsString);
+
+        saveToFile(outFileName,encoded, decodingTable);
 
 
         // just for testing, decode
@@ -58,26 +58,6 @@ public class Main {
         System.out.println(original);
 
     }// main method end
-
-    // Encode decoding table into byte array
-    // first byte always term character
-    // then bytes in pair - code/char
-    private static byte[] tableToByte(Map<String, Character> decodingTable) {
-        byte[] result = new byte[2 * decodingTable.size() + 1];
-
-        Set<String> keysTemp = decodingTable.keySet();
-        int count = 1;
-        for(String key: keysTemp){
-            Character c = decodingTable.get(key);
-            if (c == TERM_CHAR){
-                result[0] = encodeToByte(Integer.toString(c, 2));
-            }
-            result[count] = encodeToByte(key);
-            result[count+1] = encodeToByte(Integer.toString(c, 2));
-            count += 2;
-        }
-        return result;
-    }
 
     private static byte[] messageToBytes(String msg) {
         byte[] arr = new byte[getByteArraySize(msg)];
@@ -94,13 +74,39 @@ public class Main {
         return arr;
     }
 
-    private static void saveToFile(String outFileName, String encoded, String decodingTable) throws IOException {
+    private static void saveToFile(String outFileName, String encoded, Map<String, Character> decodingTable) throws IOException {
         byte[] arr = messageToBytes(encoded);
-        byte[] table = messageToBytes(decodingTable);
+
+
+        Set<String> tableKeys = decodingTable.keySet();
+        String termKey = "";
+
+        for (String key: tableKeys){
+            if (decodingTable.get(key).equals(TERM_CHAR)){
+                termKey = key;
+            }
+        }
+
+        try(BufferedWriter writer = new BufferedWriter(new FileWriter("table.txt"))){
+
+            writer.write(termKey + "=" + "~");
+            writer.newLine();
+
+            for (String key: tableKeys){
+                if (key.equals(termKey)){
+                    continue;
+                } else {
+                    writer.write(key + "=" + decodingTable.get(key));
+                    writer.newLine();
+                }
+
+            }
+
+
+        }
 
         try(OutputStream outputStream = new FileOutputStream(outFileName)){
             outputStream.write(arr);
-            outputStream.write(table);
         }
     }
 
