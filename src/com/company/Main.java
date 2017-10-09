@@ -22,7 +22,7 @@ public class Main {
         String fileName = "test.txt";
         String outFileName = "text.huff";
 
-        // HashMap of frequences which stores characters and nodes, gets the hashmap from the getFrequencies method
+        // HashMap of frequencies which stores characters and nodes, gets the hashmap from the getFrequencies method
         Map<Character, Node> frequencies = getFrequencies(fileName);
         // TEST - Print out frequencies
         Node term = new Node();
@@ -48,15 +48,36 @@ public class Main {
         System.out.println(encoded);
 
         Map<String, Character> decodingTable = createDecodingTable(encodingTable);
-        String decodingTableAsString = tableToString(decodingTable);
+        byte[] decodingTableAsByte = tableToByte(decodingTable);
 
-        saveToFile(outFileName,encoded, decodingTableAsString);
+        //saveToFile(outFileName,encoded, decodingTableAsString);
+
 
         // just for testing, decode
         String original = decode(encoded, decodingTable);
         System.out.println(original);
 
     }// main method end
+
+    // Encode decoding table into byte array
+    // first byte always term character
+    // then bytes in pair - code/char
+    private static byte[] tableToByte(Map<String, Character> decodingTable) {
+        byte[] result = new byte[2 * decodingTable.size() + 1];
+
+        Set<String> keysTemp = decodingTable.keySet();
+        int count = 1;
+        for(String key: keysTemp){
+            Character c = decodingTable.get(key);
+            if (c == TERM_CHAR){
+                result[0] = encodeToByte(Integer.toString(c, 2));
+            }
+            result[count] = encodeToByte(key);
+            result[count+1] = encodeToByte(Integer.toString(c, 2));
+            count += 2;
+        }
+        return result;
+    }
 
     private static byte[] messageToBytes(String msg) {
         byte[] arr = new byte[getByteArraySize(msg)];
@@ -75,10 +96,7 @@ public class Main {
 
     private static void saveToFile(String outFileName, String encoded, String decodingTable) throws IOException {
         byte[] arr = messageToBytes(encoded);
-        System.out.println(arr);
-
         byte[] table = messageToBytes(decodingTable);
-        System.out.println(table);
 
         try(OutputStream outputStream = new FileOutputStream(outFileName)){
             outputStream.write(arr);
@@ -87,11 +105,15 @@ public class Main {
     }
 
     private static byte encodeToByte(String chunk) {
+        if (chunk.length() > 8) {
+            System.out.println("*** Error: "+chunk);
+        }
+
         byte result = 0;
         for(int i = 0; i < chunk.length(); i++) {
             char c = chunk.charAt(i); // can only be 1 or 0
             if (c == '1') {
-                byte b = (byte)(1 << (7 - i));
+                byte b = (byte)(1 << (chunk.length() - i - 1));
                 result = (byte) (result | b);
             }
             //System.out.println(Integer.toBinaryString(result));
