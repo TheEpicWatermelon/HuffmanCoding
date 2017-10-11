@@ -21,9 +21,16 @@ public class HuffmanEncoder {
     static final char TERM_CHAR = 30;
 
     public static void main(String[] args) throws IOException {
-        // Files for input and output, text.txt is for input and text.huff is the output
-        String fileName = "test.txt";
-        String outFileName = "text.huff";
+        // check parameters
+        if (args.length != 2) {
+            System.err.println("Incorrect usage! HuffmanEncoder <file to encode> <output file>");
+            System.exit(1);
+        }
+
+        // Files for input and output
+        String fileName = args[0];
+        String outFileName = args[1];
+        System.out.println("Compressing "+fileName+" to "+outFileName);
 
         // HashMap of frequencies which stores characters and nodes, gets the hashmap from the getFrequencies method
         Map<Character, Node> frequencies = getFrequencies(fileName);
