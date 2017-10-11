@@ -15,8 +15,8 @@ import java.util.*;
 
 // Main Class start
 public class Main {
-    // Tilda will be our terminating character
-    static final char TERM_CHAR = '~';
+    // Record Separator(ASCII) will be our terminating character
+    static final char TERM_CHAR = 30;
 
     // main method start
     public static void main(String[] args) throws IOException {
@@ -164,12 +164,12 @@ public class Main {
      * takes a chunk of string which is of 8 length and change it to one byte, it returns that byte
      * @author Sasha Maximovitch
      * Version 1.0
-     * @param chunk - the chunck of string that is 8 characters long, it will be converted to a byte
+     * @param chunk - the chunk of string that is 8 characters long, it will be converted to a byte
      * @return a byte holding the chunk
      */
 
     private static byte encodeToByte(String chunk) {
-        // if the chuncks length is less than 8, produce an error
+        // if the chunks length is less than 8, produce an error
         if (chunk.length() > 8) {
             System.out.println("*** Error: "+chunk);
         }
@@ -196,7 +196,7 @@ public class Main {
     }// end encodeToByte
 
     /**
-     * getChunck
+     * getChunk
      * takes the encoded message and takes a chunk of 8 characters that was specified and returns it
      * @author Sasha Maximovitch
      * Version 1.0
