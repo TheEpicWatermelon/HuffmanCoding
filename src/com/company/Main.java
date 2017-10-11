@@ -7,8 +7,8 @@ import java.util.*;
 
 /**
  * Huffman Encoder
- * Version 3.0
  * @author Sasha Maximovitch
+ * Version 3.0
  * @date October 4th,2017
  * Uses Huffman coding to encode ASCII based files
  */
@@ -57,12 +57,11 @@ public class Main {
         // TEST - print out the encoded text
         //System.out.println(encoded);
 
-        // create decodingTable that will be put in a text file for the decoder to read
-        Map<String, Character> decodingTable = createDecodingTable(encodingTable);
+        // encodes the table to binary representation
+        String encodedTable = decodingTableAsBinary(encodingTable);
 
-        // saves the encoded message in the .huff file, and saves the decoding table in a text, all for the decoder to use
-        saveToFile(outFileName,encoded, decodingTable);
-
+        // saves the encoded table and text in the .huff file
+        saveToFile(outFileName,encoded, encodedTable);
 
         // just for testing, decode
         //String original = decode(encoded, decodingTable);
@@ -71,9 +70,59 @@ public class Main {
     }// main method end
 
     /**
+     * decodingTableAsBinary
+     * Format:
+     * Byte 1: Length of table(Pairs)
+     * Byte 2: Termination Character
+     * Byte 3: Termination Code
+     * Rest is: Character, code pairs. Code will have a 1 at the beginning to signify start of code, that one does not count
+     * Longest code can be 7 chars for any ascii character, therefore you can always have 1
+     * Version 1.0
+     * @param table - encodeTable to be changed to binary
+     * @return String representation of binary
+     */
+
+    private static String decodingTableAsBinary(Map<Character, String> table) {
+
+        // String that holds the binary representation of the variable to be returned
+        String result = "";
+
+        // add length of the table(in pairs)
+        result += padWithZeros(Integer.toBinaryString(table.size()));
+
+        // add termination and code
+        result += padWithZeros(Integer.toBinaryString(TERM_CHAR));
+        result += padWithZeros("1" + table.get(TERM_CHAR));
+
+        // get a set of all the keys from the table
+        Set<Character> characters = table.keySet();
+        // remove the termination character
+        characters.remove(TERM_CHAR);
+
+        // add all the table elements to result in binary form, add on to the codes to signify the code start
+        for (Character c: characters){
+            result += padWithZeros(Integer.toBinaryString(c));
+            result += padWithZeros("1"+table.get(c));
+        }
+        //System.out.println(result);
+        return result;
+    }// end decodeTableAsBinary
+
+    /**
+     * Pads given text with leading zeros up to total size of 8(To convert it to binary)
+     * Version 1.0
+     * @param text - the text that needs to be converted to binary
+     * @return String for the binary representation of text
+     */
+    private static String padWithZeros(String text) {
+        // add text to 8 zeros and then substring the last 8 characters to get binary
+        String result = "00000000" + text;
+        return result.substring(result.length() - 8);
+    }// end padWithZeros
+
+    /**
      * messageToBytes
      * Takes the encoded text and changes it all to bytes in a byte array
-     * @author Sasha Maximovitch
      * Version 1.0
      * @param msg, the text that needs to be encoded to bytes
      * @return byte[], this will include the message in a byte array
@@ -103,58 +152,23 @@ public class Main {
 
     /**
      * saveToFile
-     * Takes the decoding table and outputs it into table.txt to be used by decoder, then it takes the encoded message and stores it in the .huff output file
-     * @author Sasha Maximovitch
+     * stores the decoded table and encoded message in a specified .huff file
      * Version 1.0
      * @param outFileName - the name of the .huff file that will be the output for the encoded text
      * @param encoded - the text that is encoded and ready to be put into the output file
-     * @param decodingTable - the decoding table that will be used in table.txt for the decoder to decode the encoded message
+     * @param encodedTable - the encoded table to be outputted to the file
      * @throws IOException
      */
 
-    private static void saveToFile(String outFileName, String encoded, Map<String, Character> decodingTable) throws IOException {
+    private static void saveToFile(String outFileName, String encoded, String encodedTable) throws IOException {
         // Change the encoded message into an array of bytes, 8 bits each
         byte[] arr = messageToBytes(encoded);
-
-        // get a set off all the keys from the decoding table
-        Set<String> tableKeys = decodingTable.keySet();
-        // set a variable which will store the key for the termination character
-        String termKey = "";
-
-        // loop through all the keys and find which one stores the terminating character, then save the key
-        for (String key: tableKeys){
-            // if the key is storing the terminating character
-            if (decodingTable.get(key).equals(TERM_CHAR)){
-                // save the key into termKey
-                termKey = key;
-            }
-        }
-
-        // output the whole table into table.txt for decoding
-        try(BufferedWriter writer = new BufferedWriter(new FileWriter("table.txt"))){
-
-            // the first thing in the file will always be the termination key with the tilda
-            writer.write(termKey + "=" + "~");
-            // create a new line in the file
-            writer.newLine();
-
-            // loop through all the keys
-            for (String key: tableKeys){
-                // if it finds the termination key then skip over it
-                if (key.equals(termKey)){
-                    continue;
-                } else {
-                    // else, write out the key with the character it is associated with, put an equal sign in between
-                    writer.write(key + "=" + decodingTable.get(key));
-                    // create a new line
-                    writer.newLine();
-                }
-            }
-        }// close the output to table.txt
+        byte[] table = messageToBytes(encodedTable);
 
         // output the the specified .huff file for the encoded text
         try(OutputStream outputStream = new FileOutputStream(outFileName)){
             // output the whole byte array into the .huff file in outFileName
+            outputStream.write(table);
             outputStream.write(arr);
         }// close the output to outFileName
     }// end of saveToFile
@@ -162,7 +176,6 @@ public class Main {
     /**
      * encodeToByte
      * takes a chunk of string which is of 8 length and change it to one byte, it returns that byte
-     * @author Sasha Maximovitch
      * Version 1.0
      * @param chunk - the chunk of string that is 8 characters long, it will be converted to a byte
      * @return a byte holding the chunk
@@ -198,7 +211,6 @@ public class Main {
     /**
      * getChunk
      * takes the encoded message and takes a chunk of 8 characters that was specified and returns it
-     * @author Sasha Maximovitch
      * Version 1.0
      * @param encoded - the encoded text
      * @param i - the chunk number that needs to be returned
@@ -214,7 +226,6 @@ public class Main {
     /**
      * getByteArraySize
      * takes an encoded text and finds out how many chunks of 8 are inside it, if there is a remainder, it adds one chunk because bytes must have 8 bits
-     * @author Sasha Maximovitch
      * Version 1.0
      * @param encoded - the encoded text
      * @return - returns the number of chunks in the encoded message
@@ -237,36 +248,8 @@ public class Main {
     }// end getByteArraySize
 
     /**
-     * createDecodingTable
-     * takes the encoding table and switches the keys to value and the values to keys to help with decoding
-     * @author Sasha
-     * Version 1.0
-     * @param encodingTable - the encoding table with characters as keys and String as values
-     * @return - returns a map that is the reverse of the encoding table
-     */
-
-    private static Map<String, Character> createDecodingTable(Map<Character, String> encodingTable){
-        // create a new map for the decoding table
-        Map<String, Character> decodingTable = new HashMap<>();
-
-        // get all the keys from the encoding table
-        Set<Character> keys = encodingTable.keySet();
-        // loop through all the keys
-        for(Character c: keys) {
-            // set the decoding table by getting the value from each key in the encoding table and putting it as the key and putting the encoding key as the value in the decoding table
-            decodingTable.put(encodingTable.get(c),c);
-        }
-        // TEST - prints out the whole decoding table
-        //System.out.println(decodingTable);
-
-        // return the decodingTable map
-        return  decodingTable;
-    }// end createDecodingTable
-
-    /**
      * TEST - decode
      * a test method that decodes the encoded string
-     * @author Sasha Maximovitch
      * Version 1.0
      * @param encoded - the encoded String
      * @param decodingTable - the decoding table
@@ -302,7 +285,6 @@ public class Main {
     /**
      * encode
      * reads a specified file and uses the encoding table to encode each character and returns the encoded string
-     * @author Sasha Maximovitch
      * Version 1.0
      * @param fileName - the file that will be read from
      * @param encodingTable - the encoding table with all the characters with their matching codes
@@ -341,7 +323,6 @@ public class Main {
      * getFrequencies
      * Reads a file and stores the characters and nodes(frequency and characters) into a hashmap
      * Version 1.0
-     * @author Sasha Maximovitch
      * @param fileName - name of the file that is to be read from
      * @return Hashmap array with Characters and Nodes
      * @throws IOException
@@ -391,7 +372,6 @@ public class Main {
     /**
      * sortByFrequency
      * takes a List of nodes and sorts the list in order of the nodes frequency, from least to greatest
-     * @author Sasha Maximovitch
      * Version 1.0
      * @param nodes - the array list of nodes
      */
@@ -409,7 +389,6 @@ public class Main {
     /**
      * createTree
      * takes the list of nodes and creates a tree and returns the top node back
-     * @author Sasha Maximovitch
      * Version 1.0
      * @param nodes - the list of current nodes
      * @return - returns back the top node in the tree
