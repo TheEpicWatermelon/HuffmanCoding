@@ -12,13 +12,11 @@ import java.util.*;
  * @author Sasha Maximovitch
  *         Version 3.0
  * @date October 4th,2017
- * Uses Huffman coding to encode ASCII based files
+ * Uses Huffman coding to encode any file
  */
 
 
 public class HuffmanEncoder {
-    // Record Separator(ASCII) will be our terminating character
-    static final char TERM_CHAR = 30;
 
     public static void main(String[] args) throws IOException {
         // check parameters
@@ -33,14 +31,9 @@ public class HuffmanEncoder {
         System.out.println("Compressing "+fileName+" to "+outFileName);
 
         // HashMap of frequencies which stores characters and nodes, gets the hashmap from the getFrequencies method
-        Map<Character, Node> frequencies = getFrequencies(fileName);
+        Map<Byte, Node> frequencies = getFrequencies(fileName);
+        System.out.println(frequencies.size());
 
-        // CREATE A TERMINATION CHARACTER WITH ITS OWN NODE
-        Node term = new Node();
-        term.c = TERM_CHAR;
-        // Frequency one for the termination character
-        term.frequency = 1;
-        frequencies.put(TERM_CHAR, term);
 
         // TEST - PRINT OUT ALL THE FREQUENCIES
         //System.out.println(frequencies);
@@ -52,25 +45,30 @@ public class HuffmanEncoder {
 
         // Get the top node by using the Arraylist of nodes in createTree
         Node topNode = createTree(nodes);
+        System.out.println("Tree created");
 
         // create an encoding table to be used when encoding the file
-        Map<Character, String> encodingTable = new HashMap<>();
+        Map<Byte, String> encodingTable = new HashMap<>();
         createEncodingTable(topNode, "", encodingTable);
+        System.out.println("Created encoding table");
 
         // TEST - Print out the encoding table
         //System.out.println(encodingTable);
 
         // encode using the encoding table from the input file
         String encoded = encode(fileName, encodingTable);
+        System.out.println(encoded.length());
         // TEST - print out the encoded text
         //System.out.println(encoded);
 
         // encodes the table to binary representation
-        String encodedTable = decodingTableAsBinary(encodingTable);
+        String encodedTable = decodingTableAsBinary(encodingTable,encoded);
+        System.out.println(encodedTable.length());
 
         // saves the encoded table and text in the .huff file
         saveToFile(outFileName, encoded, encodedTable);
 
+        System.out.println("Compressing finished");
         // just for testing, decode
         //String original = decode(encoded, decodingTable);
         //System.out.println(original);
@@ -81,41 +79,51 @@ public class HuffmanEncoder {
      * decodingTableAsBinary
      * Format:
      * Byte 1: Length of table(Pairs)
-     * Byte 2: Termination Character
-     * Byte 3: Termination Code
-     * Rest is: Character, code pairs. Code will have a 1 at the beginning to signify start of code, that one does not count
-     * Longest code can be 7 chars for any ascii character, therefore you can always have 1
+     * Byte 2: The number of zeros in the last byte that needs to be skipped, because the file ended
+     * Rest is: Byte, length of byte code, and the code of the byte.
      * Version 1.0
      *
      * @param table - encodeTable to be changed to binary
      * @return String representation of binary
      */
 
-    private static String decodingTableAsBinary(Map<Character, String> table) {
+    private static String decodingTableAsBinary(Map<Byte, String> table, String encodedString) {
 
         // String that holds the binary representation of the variable to be returned
-        String result = "";
+        StringBuilder result = new StringBuilder();
 
         // add length of the table(in pairs)
-        result += padWithZeros(Integer.toBinaryString(table.size()));
-
-        // add termination and code
-        result += padWithZeros(Integer.toBinaryString(TERM_CHAR));
-        result += padWithZeros("1" + table.get(TERM_CHAR));
+        result.append(padWithZeros(Integer.toBinaryString(table.size())));
+        result.append(padWithZeros(Integer.toBinaryString(getRemainingZeros(encodedString))));
 
         // get a set of all the keys from the table
-        Set<Character> characters = table.keySet();
-        // remove the termination character
-        characters.remove(TERM_CHAR);
+        Set<Byte> bytes = table.keySet();
 
-        // add all the table elements to result in binary form, add on to the codes to signify the code start
-        for (Character c : characters) {
-            result += padWithZeros(Integer.toBinaryString(c));
-            result += padWithZeros("1" + table.get(c));
+        System.out.println("size "+ bytes.size());
+
+        // add all the table elements to result in binary form, before the code, add the length of the code
+        for (Byte b : bytes) {
+            result.append(padWithZeros(Integer.toBinaryString(b)));
+            result.append(padWithZeros(Integer.toBinaryString((table.get(b)).length())));
+            result.append(padWithZeros(table.get(b)));
         }
+        System.out.println("size result " + result.length());
         //System.out.println(result);
-        return result;
+        return result.toString();
     }// end decodeTableAsBinary
+
+    /**
+     * Gives back the total number of zeros at the end of the file to be skipped
+     * Version 1.0
+     * @param encoded string for the message
+     * @return integer for the number of zeros to skip over at the end of the file
+     */
+    private static int getRemainingZeros(String encoded){
+        // gets the remainder of the length of the encoded string by 8, since it will all be divided into bytes of 8
+        int remainder = encoded.length() & 8;
+        // returns 8 - remainder as that is the number of zeros at the end of the file that must be skipped
+        return 8 - remainder;
+    }// end getRemainingZeros
 
     /**
      * Pads given text with leading zeros up to total size of 8(To convert it to binary)
@@ -300,40 +308,48 @@ public class HuffmanEncoder {
 
     /**
      * encode
-     * reads a specified file and uses the encoding table to encode each character and returns the encoded string
+     * reads a specified file and uses the encoding table to encode each byte and returns the encoded string
      * Version 1.0
      *
      * @param fileName      - the file that will be read from
-     * @param encodingTable - the encoding table with all the characters with their matching codes
+     * @param encodingTable - the encoding table with all the bytes with their matching codes
      * @return - returns back the encoded string
      * @throws IOException
      */
 
-    private static String encode(String fileName, Map<Character, String> encodingTable) throws IOException {
+    private static String encode(String fileName, Map<Byte, String> encodingTable) throws IOException {
 
         // String that will hold the encoded string
-        String encode = "";
+        StringBuilder encode = new StringBuilder();
 
-        // read through the specified file
-        try (BufferedReader inputStream = new BufferedReader(new FileReader(fileName))) {
-
-            // integer that will be used to store values from the file, will be -1 when the file ends
-            int i;
-
-            // while the file is not finsihed
-            while ((i = inputStream.read()) != -1) {
-                // store i as a char in the char value
-                char c = (char) i;
-
-                // use the encoding table to find the code for the current character and add it to the encode string
-                encode += encodingTable.get(c);
-            }
+        // variable which holds an array of all the bytes from the input file
+        byte[] getBytes;
+        // creates an inputStream to be used to read the file
+        InputStream inputStream = null;
+        // try reading the specified inputFile and collecting all the bytes into an array
+        try {
+            // create a path to the input file
+            File inputFile = new File(fileName);
+            // set getBytes to the length of the file
+            getBytes = new byte[(int) inputFile.length()];
+            inputStream = new FileInputStream(inputFile);
+            // read all the bytes in the file and store it into getBytes
+            inputStream.read(getBytes);
+        }finally {
+            if (!(inputStream == null))
+                inputStream.close();
         }
 
-        // add termination term to the encode string
-        encode += encodingTable.get(TERM_CHAR);
+        //System.out.println(getBytes.length);
+
+        // loop through getByte and encode each byte and add it to the encode string
+        for (int i = 0; i < getBytes.length; i++) {
+            byte tempByte = getBytes[i];
+            encode.append(encodingTable.get(tempByte));
+        }
+        System.out.println("Done");
         // return the encoded string
-        return encode;
+        return encode.toString();
     }// end encode
 
     /**
@@ -346,39 +362,44 @@ public class HuffmanEncoder {
      * @throws IOException
      */
 
-    private static Map<Character, Node> getFrequencies(String fileName) throws IOException {
+    private static Map<Byte, Node> getFrequencies(String fileName) throws IOException {
         // Creates a hashmap that has Characters as a key and Nodes as the value
-        Map<Character, Node> frequency = new HashMap<>();
+        Map<Byte, Node> frequency = new HashMap<>();
 
-        // try reading the file that is selecte
-        try (BufferedReader inputStream = new BufferedReader(new FileReader(fileName))) {
+        byte[] getBytes;
+        InputStream inputStream = null;
+        // try reading the specified inputFile and collecting all the bytes into an array
+        try {
+            File inputFile = new File(fileName);
+            getBytes = new byte[(int) inputFile.length()];
+            inputStream = new FileInputStream(inputFile);
+            inputStream.read(getBytes);
+        }finally {
+            if (!(inputStream == null))
+                inputStream.close();
+        }
 
-            // create an int to see if there is more lines left in the file
-            int i;
-            // while there is more lines left repeat
-            while ((i = inputStream.read()) != -1) {
-                // changes the ASCII to an actual character
-                char c = (char) i;
+        // loop through all the bytes and add them to the table, or increase their frequency
+        for (int i = 0; i < getBytes.length; i++) {
+            // get the current byte in the getBytes array
+            byte currentByte = getBytes[i];
 
-                // Creates a temporary node that stores a node from the frequency of the current character
-                Node node = frequency.get(c);
+            // creates a temporary node that stores a node from frequency of the current byte
+            Node node = frequency.get(currentByte);
 
-                // if that character doesn't have a node create a new one
-                if (node == null) {
-                    // create a new node
-                    node = new Node();
-                    // set the character to that node as c
-                    node.c = c;
-                    // set the frequency of the new node as 0
-                    node.frequency = 0;
-                }// end while
-
-                // increase the frequency of that character by one
-                node.frequency += 1;
-                // update/add the character and node to the frequency map
-                frequency.put(c, node);
+            // if the current byte does not have its own node, create one
+            if (node == null){
+                node = new Node();
+                node.b = currentByte;
+                node.frequency = 0;
             }
-        } // try
+
+            // increase the frequency of the current byte's node by one
+            node.frequency += 1;
+
+            // update/add the byte and node to the frequency map
+            frequency.put(currentByte, node);
+        }
 
         // TEST - print out the frequency map
         //System.out.println(frequency);
@@ -463,13 +484,13 @@ public class HuffmanEncoder {
      * @param map  - the map that holds the character and its code
      */
 
-    private static void createEncodingTable(Node node, String code, Map<Character, String> map) {
+    private static void createEncodingTable(Node node, String code, Map<Byte, String> map) {
         // if the current node has a character
-        if (node.c != null) {
+        if (node.b != null) {
             // TEST - print out the character with its code
             //System.out.println(node.c+"="+code);
             // put the character and its code into the map
-            map.put(node.c, code);
+            map.put(node.b, code);
             // return back
             return;
         }
