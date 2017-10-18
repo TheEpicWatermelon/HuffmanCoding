@@ -20,6 +20,8 @@ import java.util.Map;
 
 public class HuffmanDecoder {
 
+    static int endTable = 0;
+
     public static void main(String[] args) throws IOException {
         // variables
         String fileName = "test.huff"; // imports the file
@@ -116,9 +118,8 @@ public class HuffmanDecoder {
     }
 
     private static ArrayList<Byte> getEncoded(byte[] data) {
-        int length = ((int)data[0]) * 3 + 2;
         ArrayList<Byte> encoded = new ArrayList<Byte>();
-        for (int i = length; i < data.length; i++) {
+        for (int i = endTable; i < data.length; i++) {
             encoded.add(data[i]);
 
         }
@@ -140,34 +141,74 @@ public class HuffmanDecoder {
         return tempText;
     }
 
-    private static String getCode(byte[] data, int position, int lengthOfCode) {
-        String tempCode = "";
-        byte currentByte = data[position];
-        byte temp = 0;
-        for (int i = lengthOfCode -1; i >= 0; i--) {
-            temp = (byte) Math.pow(2, i);
-            if ((temp & currentByte) != 0) {
-                tempCode += "1";
-            } else {
-                tempCode += "0";
-            }
+    private static String getCode(byte[] data, int startPosition, int remainder, int numberOfBytes) {
+        StringBuilder tempCode = new StringBuilder();
 
+        if (numberOfBytes > 1) {
+            for (int i = 0; i < numberOfBytes; i++) {
+                byte currentByte = data[startPosition + i];
+                if (i == (numberOfBytes - 1)) {
+                    if (remainder == 0){
+                        remainder = 8;
+                    }
+                    for (int j = 7; j > 7 - remainder; j--) {
+                        byte temp = (byte) Math.pow(2, j);
+                        if ((temp & currentByte) != 0) {
+                            tempCode.append("1");
+                        } else {
+                            tempCode.append("0");
+                        }
+                    }
+                } else {
+                    for (int j = 7; j >= 0; j--) {
+                        byte temp = (byte) Math.pow(2, j);
+                        if ((temp & currentByte) != 0) {
+                            tempCode.append("1");
+                        } else {
+                            tempCode.append("0");
+                        }
+                    }
+                }
+
+            }
+        }else {
+            if (remainder == 0){
+                remainder = 8;
+            }
+            byte currentByte = data[startPosition];
+            for (int i = remainder - 1; i >= 0  ; i--) {
+                byte temp = (byte) Math.pow(2,i);
+                if ( (temp & currentByte) != 0){
+                    tempCode.append("1");
+                } else{
+                    tempCode.append("0");
+                }
+            }
         }
-        return tempCode;
+        return tempCode.toString();
     }
 
     private static Map<String, Byte> getTable(byte[] data) {
-        int lengthOfTable = ((int)data[0]) * 3;
+        int lengthOfTable = (int)data[0];
+        System.out.println("l " + lengthOfTable);
         Map<String, Byte> tempTable = new HashMap();
-        for (int i = 2; i < lengthOfTable; i += 3) {
-            byte b = data[i];
-            int lengthOfCode = (byte) data[i + 1];
-            String code = getCode(data, i + 2, lengthOfCode);
-
+        int pointer = 2;
+        while (tempTable.size() < lengthOfTable) {
+            byte b = data[pointer];
+            int lengthOfCode = (byte) data[pointer + 1];
+            int numberOfBytes = lengthOfCode / 8;
+            int remainder = lengthOfCode % 8;
+            if (remainder != 0){
+                numberOfBytes += 1;
+            }
+            pointer += 2;
+            String code = getCode(data, pointer, remainder, numberOfBytes);
             tempTable.put(code, b);
-
+            //System.out.println(code+"->"+b);
+            pointer += numberOfBytes;
         }
         //System.out.println(lengthOfTable);
+        endTable = pointer;
         return tempTable;
     }
 

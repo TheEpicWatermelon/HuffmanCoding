@@ -54,13 +54,6 @@ public class HuffmanEncoder {
         // TEST - Print out the encoding table
         System.out.println(encodingTable.size());
         System.out.println(encodingTable);
-        int maxLen = 0;
-        for(String s: encodingTable.values()){
-            if (s.length() > maxLen) {
-                maxLen = s.length();
-            }
-        }
-        System.out.println("MaxLen: "+maxLen);
 
         // encode using the encoding table from the input file
         String encoded = encode(fileName, encodingTable);
@@ -140,11 +133,18 @@ public class HuffmanEncoder {
      * @return String for the binary representation of text
      */
     private static String padWithZeros(String text) {
-        //int bytesSize = text.length() / 8;
-
+        int bytesSize = text.length() / 8;
+        if ( (text.length() % 8) != 0) {
+            bytesSize += 1;
+        }
+        if (bytesSize == 1){
+            String result = "00000000" + text;
+            return result.substring(result.length() - 8);
+        }else {
+            String result = text + "00000000";
+            return result.substring(0,8*bytesSize);
+        }
         // add text to 8 zeros and then substring the last 8 characters to get binary
-        String result = "00000000" + text;
-        return result.substring(result.length() - 8);
     }// end padWithZeros
 
     /**
