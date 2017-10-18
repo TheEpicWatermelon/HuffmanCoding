@@ -24,7 +24,7 @@ public class Node {
     // node to the right and down of this node
     Node right;
 
-    // Make it able to print out the Node, prints out the character and the frequency value
+    // Make it able to print out the Node, prints out the byte and the frequency value
     @Override
     public String toString() {
         return "'"+b+"':"+frequency;
