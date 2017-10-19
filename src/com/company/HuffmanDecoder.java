@@ -25,8 +25,22 @@ public class HuffmanDecoder {
 
     public static void main(String[] args) throws IOException {
 
-        // get the input file
-        String fileName = "test.huff";
+        // buffered reader that will be used to get user inputs
+        BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+
+        // welcomes the user
+        System.out.println("Welcome to the .huff decoder");
+
+        // get the encoded file name from the user
+        System.out.println("Please input the name of the .huff file to be decoded (don't add the .huff extension)");
+        String fileName = userInput.readLine() + ".huff";
+
+        // get the output file from the user
+        System.out.println("Now, please input the name of the file you want encode file to decode to (add extension)");
+        String outFileName = userInput.readLine();
+
+        // get time for when the code started
+        double startTime = System.currentTimeMillis();
 
         // get an array of bytes for the whole file
         byte[] data = getByte(fileName);
@@ -38,11 +52,18 @@ public class HuffmanDecoder {
         ArrayList<Byte> encodedByte = getEncoded(data);
         // an array list to hold the decoded bytes
         ArrayList<Byte> decodedByte = decode(encodedByte, table, (int) data[1]);
-        ;
 
         //save the decoded bytes in the specified file
-        saveToFile(decodedByte, "Decoded.png");
-        System.out.println("End file output");
+        saveToFile(decodedByte, outFileName);
+
+        // get time for when the code ended
+        double endTime = System.currentTimeMillis();
+
+        // calculate and print out the total time of the program
+        double totalTime = (endTime - startTime) / 1000.0;
+        System.out.println("Time to compress: " + totalTime + " seconds");
+
+        System.out.println("Finished Decoding");
     }// end main
 
     /**
