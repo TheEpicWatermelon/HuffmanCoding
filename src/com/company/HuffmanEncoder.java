@@ -106,14 +106,13 @@ public class HuffmanEncoder {
         }
         result.append(padWithZeros(Integer.toBinaryString(getRemainingZeros(encodedString))));
 
-        // get a set of all the keys from the table
-        Set<Byte> bytes = table.keySet();
-
         // add all the table elements to result in binary form, before the code, add the length of the code
-        for (Byte b : bytes) {
+        for (Map.Entry<Byte, String> entry : table.entrySet()) {
+            Byte b = entry.getKey();
+            String value = entry.getValue();
             result.append(padWithZeros(toBinaryString(b)));
-            result.append(padWithZeros(Integer.toBinaryString((table.get(b)).length())));
-            result.append(padWithZeros(table.get(b)));
+            result.append(padWithZeros(Integer.toBinaryString((value).length())));
+            result.append(padWithZeros(value));
         }
         return result.toString();
     }// end decodeTableAsBinary
@@ -309,28 +308,28 @@ public class HuffmanEncoder {
 
     private static String decode(String encoded, Map<String, Character> decodingTable) {
         // text which holds the decoded text
-        String text = "";
+        StringBuilder text = new StringBuilder();
         // temporary variable which holds a set of the encoded string to be decoded, will be reset once a character is found
-        String temp = "";
+        StringBuilder temp = new StringBuilder();
 
         // loop through the whole encoded text
         for (int i = 0; i < encoded.length(); i++) {
             // add the current character into temp
-            temp += encoded.substring(i, i + 1);
+            temp.append(encoded.substring(i, i + 1));
 
             // takes character from the decoding table, because temp will be a code, if temp is not a valid key, c will be null
-            Character c = decodingTable.get(temp);
+            Character c = decodingTable.get(temp.toString());
 
             // if c is not null
             if (c != null) {
                 // add the character to the decoded text
-                text += c;
+                text.append(c);
                 // reset the temp variable
-                temp = "";
+                temp = new StringBuilder();
             }
         }
         // return the decoded text
-        return text;
+        return text.toString();
     }// end decode
 
     /**

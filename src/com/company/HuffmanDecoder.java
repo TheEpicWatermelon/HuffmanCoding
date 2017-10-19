@@ -28,11 +28,9 @@ public class HuffmanDecoder {
         System.out.println("File imported");
         byte[] data = getByte(fileName);// imports the file data into a byte array
         System.out.println("Array made");
-        Map<String, Byte> table = new HashMap();// a map that stores the string code value of a character as a string and the character is taken from the file
-        System.out.println("Map made");
 
         System.out.println(data[1]);
-        table = getTable(data);
+        Map<String, Byte> table = getTable(data);
         System.out.println("got table");
         System.out.println(table);
 
@@ -74,7 +72,9 @@ public class HuffmanDecoder {
             output = new FileOutputStream(file);
             output.write(decodedArray);
         } finally {
-            output.close();
+            if (output != null){
+                output.close();
+            }
         }
 
 
@@ -131,18 +131,18 @@ public class HuffmanDecoder {
     }
 
     private static String getText(byte b) {
-        String tempText = "";
+        StringBuilder tempText = new StringBuilder();
         byte temp = 0;
 
         for (int i = 7; i >= 0; i--) {
             temp = (byte) Math.pow(2, i);
             if ((temp & b) != 0) {
-                tempText += "1";
+                tempText.append('1');
             } else {
-                tempText += "0";
+                tempText.append('0');
             }
         }
-        return tempText;
+        return tempText.toString();
     }
 
     private static String getCode(byte[] data, int startPosition, int remainder, int numberOfBytes) {
@@ -228,7 +228,9 @@ public class HuffmanDecoder {
             input = new FileInputStream(file);
             input.read(getBytes);
         } finally {
-            input.close();
+            if (input != null) {
+                input.close();
+            }
         }
         return getBytes;
     }
