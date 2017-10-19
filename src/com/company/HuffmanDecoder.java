@@ -52,7 +52,7 @@ public class HuffmanDecoder {
 
         //saving decoded text to a file
         System.out.println("Start file output");
-        saveToFile(decodedByte, "Decoded.docx");
+        saveToFile(decodedByte, "Decoded.png");
         System.out.println("End file output");
 
 

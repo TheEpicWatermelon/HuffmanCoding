@@ -28,7 +28,7 @@ public class HuffmanEncoder {
         double startTime = System.currentTimeMillis();
 
         // Files for input and output
-        String fileName = "Document.docx";
+        String fileName = "stuff.png";
         //String fileName = "test.txt";
         String outFileName = args[1];
         System.out.println("Compressing "+fileName+" to "+outFileName);
@@ -111,12 +111,24 @@ public class HuffmanEncoder {
 
         // add all the table elements to result in binary form, before the code, add the length of the code
         for (Byte b : bytes) {
-            result.append(padWithZeros(Integer.toBinaryString(b)));
+            result.append(padWithZeros(toBinaryString(b)));
             result.append(padWithZeros(Integer.toBinaryString((table.get(b)).length())));
             result.append(padWithZeros(table.get(b)));
         }
         return result.toString();
     }// end decodeTableAsBinary
+
+    private static String toBinaryString(byte b) {
+        String s = Integer.toBinaryString(b & 255 | 256).substring(1);
+        //System.out.println(s);
+        return s;
+//        if ((int) b >= 0) {
+//            return Integer.toBinaryString(b);
+//        } else{
+//            byte temp = (byte)Math.abs(b);
+//            return "1" + padWithZeros(Integer.toBinaryString(temp)).substring(1);
+//        }
+    }
 
     /**
      * Gives back the total number of zeros at the end of the file to be skipped
