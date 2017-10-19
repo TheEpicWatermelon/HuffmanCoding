@@ -28,7 +28,7 @@ public class HuffmanEncoder {
         double startTime = System.currentTimeMillis();
 
         // Files for input and output
-        String fileName = "HarryPotter1.txt";
+        String fileName = "Document.docx";
         //String fileName = "test.txt";
         String outFileName = args[1];
         System.out.println("Compressing "+fileName+" to "+outFileName);
@@ -63,6 +63,8 @@ public class HuffmanEncoder {
         // encodes the table to binary representation
         String encodedTable = decodingTableAsBinary(encodingTable,encoded);
 
+        System.out.println(encodedTable);
+
         // saves the encoded table and text in the .huff file
         saveToFile(outFileName, encoded, encodedTable);
         double endTime = System.currentTimeMillis();
@@ -96,8 +98,12 @@ public class HuffmanEncoder {
         // String that holds the binary representation of the variable to be returned
         StringBuilder result = new StringBuilder();
 
-        // add length of the table(in pairs)
-        result.append(padWithZeros(Integer.toBinaryString(table.size())));
+        // add length of the table, if table is length of 256 make all bits 0(size cannot be larger than 256)
+        if (table.size() == 256){
+            result.append("00000000");
+        } else {
+            result.append(padWithZeros(Integer.toBinaryString(table.size())));
+        }
         result.append(padWithZeros(Integer.toBinaryString(getRemainingZeros(encodedString))));
 
         // get a set of all the keys from the table

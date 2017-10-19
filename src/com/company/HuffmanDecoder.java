@@ -52,7 +52,7 @@ public class HuffmanDecoder {
 
         //saving decoded text to a file
         System.out.println("Start file output");
-        saveToFile(decodedByte, "Decoded.txt");
+        saveToFile(decodedByte, "Decoded.docx");
         System.out.println("End file output");
 
 
@@ -65,6 +65,9 @@ public class HuffmanDecoder {
             decodedArray[i] = decoded.get(i);
 
         }
+
+        System.out.println("length of arrayList: " + decoded.size());
+        System.out.println("Length of array" + decodedArray.length);
 
         try {
             File file = new File(fileName);
@@ -79,37 +82,38 @@ public class HuffmanDecoder {
 
     private static ArrayList<Byte> decode(ArrayList<Byte> encoded, Map<String, Byte> table, int remainingZeros) {
         ArrayList<Byte> result = new ArrayList<Byte>();
-        String tempString = "";
+        StringBuilder tempString = new StringBuilder();
+        System.out.println("SIZE: " + encoded.size() );
         for (int i = 0; i < encoded.size(); i++) {
             byte currentByte = encoded.get(i);
             if (i != encoded.size()-1) {
                 for (int j = 7; j >= 0; j--) {
                     byte tempByte = (byte) Math.pow(2, j);
                     if ((tempByte & currentByte) != 0) {
-                        tempString += "1";
+                        tempString.append("1");
                     } else {
-                        tempString += "0";
+                        tempString.append("0");
                     }
-                    Byte b = table.get(tempString);
+                    Byte b = table.get(tempString.toString());
                     if (b != null) {
                         //System.out.println(tempString + "->" + b);
                         result.add(b);
-                        tempString = "";
+                        tempString.delete(0,tempString.length());
                     }
                 }
             }else {
                 for (int j = 7-remainingZeros; j >= 0; j--){
                     byte tempByte = (byte) Math.pow(2, j);
                     if ((tempByte & currentByte) != 0) {
-                        tempString += "1";
+                        tempString.append("1");
                     } else {
-                        tempString += "0";
+                        tempString.append("0");
                     }
-                    Byte b = table.get(tempString);
+                    Byte b = table.get(tempString.toString());
                     if (b != null) {
                         //System.out.println(tempString + "->" + b);
                         result.add(b);
-                        tempString = "";
+                        tempString.delete(0,tempString.length());
                     }
                 }
             }
@@ -190,6 +194,9 @@ public class HuffmanDecoder {
 
     private static Map<String, Byte> getTable(byte[] data) {
         int lengthOfTable = (int)data[0];
+        if (lengthOfTable == 0){
+            lengthOfTable = 256;
+        }
         System.out.println("l " + lengthOfTable);
         Map<String, Byte> tempTable = new HashMap();
         int pointer = 2;
