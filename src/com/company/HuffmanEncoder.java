@@ -10,7 +10,7 @@ import java.util.*;
  * Huffman Encoder
  *
  * @author Sasha Maximovitch
- *         Version 3.0
+ *         Version 6.0
  * @date October 4th,2017
  * Uses Huffman coding to encode any file
  */
@@ -25,13 +25,14 @@ public class HuffmanEncoder {
             System.exit(1);
         }
 
-        double startTime = System.currentTimeMillis();
-
         // Files for input and output
         String fileName = "stuff.png";
         //String fileName = "test.txt";
         String outFileName = args[1];
-        System.out.println("Compressing "+fileName+" to "+outFileName);
+        System.out.println("Compressing " + fileName + " to " + outFileName);
+
+        // get time for when the code started
+        double startTime = System.currentTimeMillis();
 
         // HashMap of frequencies which stores bytes and nodes, gets the hashmap from the getFrequencies method
         Map<Byte, Node> frequencies = getFrequencies(fileName);
@@ -52,8 +53,7 @@ public class HuffmanEncoder {
         createEncodingTable(topNode, "", encodingTable);
 
         // TEST - Print out the encoding table
-        System.out.println(encodingTable.size());
-        System.out.println(encodingTable);
+        //System.out.println(encodingTable);
 
         // encode using the encoding table from the input file
         String encoded = encode(fileName, encodingTable);
@@ -61,17 +61,17 @@ public class HuffmanEncoder {
         //System.out.println(encoded);
 
         // encodes the table to binary representation
-        String encodedTable = decodingTableAsBinary(encodingTable,encoded);
-
-        System.out.println(encodedTable);
+        String encodedTable = decodingTableAsBinary(encodingTable, encoded);
 
         // saves the encoded table and text in the .huff file
         saveToFile(outFileName, encoded, encodedTable);
+
+        // get time for when the code ended
         double endTime = System.currentTimeMillis();
 
-        double totalTime = (endTime - startTime) /1000.0;
+        // calculate and print out the total time of the program
+        double totalTime = (endTime - startTime) / 1000.0;
         System.out.println(totalTime + " seconds");
-
 
         System.out.println("Finished Compressing");
 
@@ -84,58 +84,67 @@ public class HuffmanEncoder {
     /**
      * decodingTableAsBinary
      * Format:
-     * Byte 1: Length of table(triplets)
+     * Byte 1: Length of table
      * Byte 2: The number of zeros in the last byte that needs to be skipped, because the file ended
      * Rest is: Byte, length of byte code, and the code of the byte.
-     * Version 1.0
+     * Version 3.0
      *
-     * @param table - encodeTable to be changed to binary
-     * @return String representation of binary
+     * @param table         - encodeTable to be changed to binary
+     * @param encodedString - the encoded text, this is to figure out the remaining zeros
+     * @return String binary representation of tree
      */
 
     private static String decodingTableAsBinary(Map<Byte, String> table, String encodedString) {
 
-        // String that holds the binary representation of the variable to be returned
+        // StringBuilder that holds the binary representation of the variable to be returned
         StringBuilder result = new StringBuilder();
 
         // add length of the table, if table is length of 256 make all bits 0(size cannot be larger than 256)
-        if (table.size() == 256){
+        if (table.size() == 256) {
             result.append("00000000");
         } else {
             result.append(padWithZeros(Integer.toBinaryString(table.size())));
-        }
+        }// add the remaining zeros
         result.append(padWithZeros(Integer.toBinaryString(getRemainingZeros(encodedString))));
 
         // add all the table elements to result in binary form, before the code, add the length of the code
         for (Map.Entry<Byte, String> entry : table.entrySet()) {
+            // byte of the current key in table and its value is stored
             Byte b = entry.getKey();
             String value = entry.getValue();
+            // add the byte to the result
             result.append(padWithZeros(toBinaryString(b)));
+            // add the length of the code
             result.append(padWithZeros(Integer.toBinaryString((value).length())));
+            // add the code
             result.append(padWithZeros(value));
         }
         return result.toString();
     }// end decodeTableAsBinary
 
+    /**
+     * toBinaryString
+     * takes a byte, creates it to a string if it is positive, if byte is negative the string will be changed to represent the negative number in binary form
+     * Version 1.0
+     *
+     * @param b holds the current byte
+     * @return a string representation of the current byte
+     */
+
     private static String toBinaryString(byte b) {
-        String s = Integer.toBinaryString(b & 255 | 256).substring(1);
-        //System.out.println(s);
-        return s;
-//        if ((int) b >= 0) {
-//            return Integer.toBinaryString(b);
-//        } else{
-//            byte temp = (byte)Math.abs(b);
-//            return "1" + padWithZeros(Integer.toBinaryString(temp)).substring(1);
-//        }
-    }
+        return Integer.toBinaryString(b & 255 | 256).substring(1);
+    }// end toBinaryString
 
     /**
+     * getRemainingZeros
      * Gives back the total number of zeros at the end of the file to be skipped
      * Version 1.0
+     *
      * @param encoded string for the message
      * @return integer for the number of zeros to skip over at the end of the file
      */
-    private static int getRemainingZeros(String encoded){
+
+    private static int getRemainingZeros(String encoded) {
         // gets the remainder of the length of the encoded string by 8, since it will all be divided into bytes of 8
         int remainder = encoded.length() % 8;
         // returns 8 - remainder as that is the number of zeros at the end of the file that must be skipped
@@ -143,25 +152,27 @@ public class HuffmanEncoder {
     }// end getRemainingZeros
 
     /**
-     * Pads given text with leading zeros up to total size of 8(To convert it to binary)
+     * padWithZeros
+     * Pads given text with leading or trailing zeros(To convert it to binary)
      * Version 1.0
      *
      * @param text - the text that needs to be converted to binary
      * @return String for the binary representation of text
      */
+
     private static String padWithZeros(String text) {
+        // get the number of bytes the current text holds(number of groups of 8, including remainder)
         int bytesSize = text.length() / 8;
-        if ( (text.length() % 8) != 0) {
+        if ((text.length() % 8) != 0) {
             bytesSize += 1;
-        }
-        if (bytesSize == 1){
+        }// if its only one byte, add leading zeros and return the last 8 zeros
+        if (bytesSize == 1) {
             String result = "00000000" + text;
             return result.substring(result.length() - 8);
-        }else {
+        } else {// if there is more then 1 byte, add trailing zeros and return a string of length 8 * number of bytes
             String result = text + "00000000";
-            return result.substring(0,8*bytesSize);
+            return result.substring(0, 8 * bytesSize);
         }
-        // add text to 8 zeros and then substring the last 8 characters to get binary
     }// end padWithZeros
 
     /**
@@ -345,7 +356,7 @@ public class HuffmanEncoder {
 
     private static String encode(String fileName, Map<Byte, String> encodingTable) throws IOException {
 
-        // String that will hold the encoded string
+        // StringBuilder that will hold the encoded string
         StringBuilder encode = new StringBuilder();
 
         // variable which holds an array of all the bytes from the input file
@@ -361,16 +372,15 @@ public class HuffmanEncoder {
             inputStream = new FileInputStream(inputFile);
             // read all the bytes in the file and store it into getBytes
             inputStream.read(getBytes);
-        }finally {
+        } finally {
             if (!(inputStream == null))
                 inputStream.close();
         }
 
-        //System.out.println(getBytes.length);
-
         // loop through getByte and encode each byte and add it to the encode string
         for (int i = 0; i < getBytes.length; i++) {
             byte tempByte = getBytes[i];
+            // TEST - print the current byte and its code
             //System.out.println(tempByte + "->" + encodingTable.get(tempByte));
             encode.append(encodingTable.get(tempByte));
         }
@@ -392,6 +402,7 @@ public class HuffmanEncoder {
         // Creates a hashmap that has Characters as a key and Nodes as the value
         Map<Byte, Node> frequency = new HashMap<>();
 
+        // holds the whole file in a byte array
         byte[] getBytes;
         InputStream inputStream = null;
         // try reading the specified inputFile and collecting all the bytes into an array
@@ -400,7 +411,7 @@ public class HuffmanEncoder {
             getBytes = new byte[(int) inputFile.length()];
             inputStream = new FileInputStream(inputFile);
             inputStream.read(getBytes);
-        }finally {
+        } finally {
             if (!(inputStream == null))
                 inputStream.close();
         }
@@ -414,7 +425,7 @@ public class HuffmanEncoder {
             Node node = frequency.get(currentByte);
 
             // if the current byte does not have its own node, create one
-            if (node == null){
+            if (node == null) {
                 node = new Node();
                 node.b = currentByte;
                 node.frequency = 0;
