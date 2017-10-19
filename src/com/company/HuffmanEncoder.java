@@ -19,16 +19,21 @@ import java.util.*;
 public class HuffmanEncoder {
 
     public static void main(String[] args) throws IOException {
-        // check parameters
-        if (args.length != 2) {
-            System.err.println("Incorrect usage! HuffmanEncoder <file to encode> <output file>");
-            System.exit(1);
-        }
 
-        // Files for input and output
-        String fileName = "stuff.png";
-        //String fileName = "test.txt";
-        String outFileName = args[1];
+        // create a buffered reader that will take in user input
+        BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+
+        // Welcome user
+        System.out.println("Welcome to the .huff compressor");
+
+        // get the file to be compressed
+        System.out.println("Please input the name of the file to be compressed(with extension)");
+        String fileName = userInput.readLine();
+
+        // get the name of the encoded file
+        System.out.println("Please input the name you want for the encoded file");
+        String outFileName = userInput.readLine() + ".huff";
+
         System.out.println("Compressing " + fileName + " to " + outFileName);
 
         // get time for when the code started
@@ -71,7 +76,7 @@ public class HuffmanEncoder {
 
         // calculate and print out the total time of the program
         double totalTime = (endTime - startTime) / 1000.0;
-        System.out.println(totalTime + " seconds");
+        System.out.println("Time to compress: " + totalTime + " seconds");
 
         System.out.println("Finished Compressing");
 
