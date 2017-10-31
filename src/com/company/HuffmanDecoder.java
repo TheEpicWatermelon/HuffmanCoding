@@ -2,6 +2,7 @@ package com.company;
 
 //imports
 
+import javax.swing.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,19 +26,23 @@ public class HuffmanDecoder {
 
     public static void main(String[] args) throws IOException {
 
-        // buffered reader that will be used to get user inputs
-        BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
-
         // welcomes the user
-        System.out.println("Welcome to the .huff decoder");
+        JOptionPane.showMessageDialog(null, "Welcome to the .huff decoder");
 
         // get the encoded file name from the user
-        System.out.println("Please input the name of the .huff file to be decoded (don't add the .huff extension)");
-        String fileName = userInput.readLine() + ".huff";
+        String fileName =  JOptionPane.showInputDialog(null, "Please input the name of the .huff file to be decoded (don't add the .huff extension)");
 
         // get the output file from the user
-        System.out.println("Now, please input the name of the file you want encode file to decode to (add extension)");
-        String outFileName = userInput.readLine();
+        String outFileName = JOptionPane.showInputDialog(null, "Now, please input the name of the file you want encode file to decode to (add extension)");
+
+        // error if one or both filenames are not inputed
+        if ( (outFileName == null) || (fileName == null) || (outFileName.equals("")) || (fileName.equals("")) ){
+            JOptionPane.showMessageDialog(null, "EXITING: NO FILE INPUTTED");
+            System.exit(1);
+        }
+
+        // start decompressing
+        JOptionPane.showMessageDialog(null, "Starting to decompress the file.");
 
         // get time for when the code started
         double startTime = System.currentTimeMillis();
@@ -60,10 +65,7 @@ public class HuffmanDecoder {
         double endTime = System.currentTimeMillis();
 
         // calculate and print out the total time of the program
-        double totalTime = (endTime - startTime) / 1000.0;
-        System.out.println("Time to compress: " + totalTime + " seconds");
-
-        System.out.println("Finished Decoding");
+        double totalTime = (endTime - startTime) / 1000.0;        JOptionPane.showMessageDialog(null, "Finished Decoding\nTime to compress: " + totalTime + " seconds");
     }// end main
 
     /**

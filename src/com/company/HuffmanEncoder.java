@@ -2,6 +2,7 @@ package com.company;
 
 //imports
 
+import javax.swing.*;
 import java.io.*;
 import java.util.*;
 
@@ -15,26 +16,27 @@ import java.util.*;
  * Uses Huffman coding to encode any file
  */
 
-
 public class HuffmanEncoder {
 
     public static void main(String[] args) throws IOException {
 
-        // create a buffered reader that will take in user input
-        BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
-
         // Welcome user
-        System.out.println("Welcome to the .huff compressor");
+        JOptionPane.showMessageDialog(null, "Welcome to the .huff compressor");
 
         // get the file to be compressed
-        System.out.println("Please input the name of the file to be compressed(with extension)");
-        String fileName = userInput.readLine();
+        String fileName =  JOptionPane.showInputDialog(null, "Please input the name of the file to be compressed(with extension)");
 
         // get the name of the encoded file
-        System.out.println("Please input the name you want for the encoded file");
-        String outFileName = userInput.readLine() + ".huff";
+        String outFileName = JOptionPane.showInputDialog(null, "Please input the name you want for the encoded file");
 
-        System.out.println("Compressing " + fileName + " to " + outFileName);
+        // error if one or both filenames are not inputed
+        if ( (outFileName == null) || (fileName == null) || (outFileName.equals("")) || (fileName.equals("")) ){
+            JOptionPane.showMessageDialog(null, "EXITING: NO FILE INPUTTED");
+            System.exit(1);
+        }
+
+        // start compressing
+        JOptionPane.showMessageDialog(null, "Compressing " + fileName + " to " + outFileName);
 
         // get time for when the code started
         double startTime = System.currentTimeMillis();
@@ -76,9 +78,7 @@ public class HuffmanEncoder {
 
         // calculate and print out the total time of the program
         double totalTime = (endTime - startTime) / 1000.0;
-        System.out.println("Time to compress: " + totalTime + " seconds");
-
-        System.out.println("Finished Compressing");
+        JOptionPane.showMessageDialog(null, "Finishing Compressing\nTime to compress: " + totalTime + " seconds");
 
         // just for testing, decode
         //String original = decode(encoded, decodingTable);
