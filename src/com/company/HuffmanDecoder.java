@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * Huffman Decoder
  *
- * @author Israel Shpilman
+ * @author Sasha Maximovitch
  *         Version 5.0
  * @date 10/11/2017
  * Decodes a .huff file into any specified file
